@@ -516,7 +516,7 @@ class Map(object):
             Data range for D3 threshold scale. Defaults to the following range
             of quantiles: [0, 0.5, 0.75, 0.85, 0.9], rounded to the nearest
             order-of-magnitude integer. Ex: 270 rounds to 200, 5600 to 6000.
-        fill_color: string, default 'blue'
+        fill_color: string, default 'blue' or list of colors
             Area fill color. Can pass a hex code, color name, or if you are
             binding data, one of the following color brewer palettes:
             'BuGn', 'BuPu', 'GnBu', 'OrRd', 'PuBu', 'PuBuGn', 'PuRd', 'RdPu',
@@ -622,14 +622,19 @@ class Map(object):
             #D3 Color scale
             series = data[columns[1]]
             domain = threshold_scale or utilities.split_six(series=series)
-            if len(domain) > 6:
-                raise ValueError('The threshold scale must be of length <= 6')
-            if not utilities.color_brewer(fill_color):
-                raise ValueError('Please pass a valid color brewer code to '
-                                 'fill_local. See docstring for valid codes.')
 
-            palette = utilities.color_brewer(fill_color)
+
+            if isinstance(fill_color, str):
+                if len(domain) > 6:
+                    raise ValueError('The threshold scale must be of length <= 6')
+                if not utilities.color_brewer(fill_color):
+                    raise ValueError('Please pass a valid color brewer code to '
+                                    'fill_local. See docstring for valid codes.')
+                palette = utilities.color_brewer(fill_color)
+            else:
+                palette = fill_color
             d3range = palette[0: len(domain) + 1]
+            assert len(d3range) == len(domain) +1 , "%d / %d" % (len(d3range), len(domain))
 
             color_temp = self.env.get_template('d3_threshold.js')
             d3scale = color_temp.render({'domain': domain,
